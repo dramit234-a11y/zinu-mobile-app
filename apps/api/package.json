@@ -12,14 +12,20 @@
     "db:migrate": "tsc -p tsconfig.build.json && node --env-file-if-exists=.env dist/db/migrate.js",
     "db:seed": "tsc -p tsconfig.build.json && node --env-file-if-exists=.env dist/scripts/seed.js",
     "staff:create": "tsc -p tsconfig.build.json && node --env-file-if-exists=.env dist/scripts/create-staff.js",
-    "test": "tsc -p tsconfig.json && node --env-file-if-exists=.env.test --test --test-concurrency=1 'dist-test/test/**/*.test.js'"
+    "test": "tsc -p tsconfig.json && node --env-file-if-exists=.env.test --test --test-concurrency=1 'dist-test/test/**/*.test.js'",
+    "start:worker": "node dist/worker.js",
+    "dev:worker": "tsc -p tsconfig.build.json && node --env-file-if-exists=.env --watch dist/worker.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1147.0",
+    "@aws-sdk/s3-presigned-post": "^3.1147.0",
+    "@aws-sdk/s3-request-presigner": "^3.1147.0",
     "@nestjs/common": "^12.1.2",
     "@nestjs/core": "^12.1.2",
     "@nestjs/platform-express": "^12.1.2",
     "@zinu/shared": "workspace:*",
     "argon2": "^0.45.1",
+    "bullmq": "^6.3.11",
     "drizzle-orm": "^0.45.3",
     "ioredis": "^6.0.0",
     "jose": "^6.2.12",

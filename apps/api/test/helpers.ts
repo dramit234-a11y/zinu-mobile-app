@@ -105,3 +105,27 @@ export async function login(base: string, phone = nextPhone(), deviceId = `devic
   if (res.status !== 200) throw new Error(`otp verify failed: ${JSON.stringify(res.body)}`);
   return res.body as { accessToken: string; refreshToken: string; isNewUser: boolean; user: any };
 }
+
+/** Signs a staff member of the given role into the admin API; returns the session cookie. */
+export async function adminCookie(ctx: TestContext, role = 'Super Admin') {
+  const staff = await ctx.createStaff(role);
+  const res = await call(ctx.base, 'POST', '/v1/admin/auth/login', { body: { email: staff.email, password: staff.password, totp: staff.totp() } });
+  if (res.status !== 200) throw new Error(`admin login failed: ${JSON.stringify(res.body)}`);
+  return res.headers.get('set-cookie')!.split(';')[0]!;
+}
+
+/** Presigns, uploads straight to object storage (like the app does) and confirms. Returns the upload id. */
+export async function uploadFile(base: string, token: string, opts: { bytes?: number; contentType?: string } = {}) {
+  const contentType = opts.contentType ?? 'image/jpeg';
+  const bytes = opts.bytes ?? 2048;
+  const pre = await call(base, 'POST', '/v1/uploads/presign', { token, body: { purpose: 'DRIVER_DOCUMENT', contentType, sizeBytes: bytes } });
+  if (pre.status !== 200) throw new Error(`presign failed: ${JSON.stringify(pre.body)}`);
+  const form = new FormData();
+  for (const [k, v] of Object.entries(pre.body.fields as Record<string, string>)) form.append(k, v);
+  form.append('file', new Blob([new Uint8Array(bytes).fill(7)], { type: contentType }), 'photo.jpg');
+  const put = await fetch(pre.body.url, { method: 'POST', body: form });
+  if (put.status >= 300) throw new Error(`storage upload failed: ${put.status} ${await put.text()}`);
+  const confirm = await call(base, 'POST', `/v1/uploads/${pre.body.uploadId}/confirm`, { token });
+  if (confirm.status !== 200) throw new Error(`confirm failed: ${JSON.stringify(confirm.body)}`);
+  return pre.body.uploadId as string;
+}

@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import { uuidv7 } from '../common/ids.js';
 import * as schema from '../db/schema.js';
-import { RANCHI, SYSTEM_ROLES } from './seed-data.js';
+import { DOCUMENT_TYPES, RANCHI, SYSTEM_ROLES } from './seed-data.js';
 
 /** Idempotent: safe to run on every deploy. */
 export async function seed(databaseUrl: string) {
@@ -39,6 +39,11 @@ export async function seed(databaseUrl: string) {
       city = await db.query.cities.findFirst({ where: eq(schema.cities.id, id) });
     }
 
+    for (const t of DOCUMENT_TYPES) {
+      // Insert-only: never overwrite rules an admin has changed.
+      await db.insert(schema.documentTypes).values(t).onConflictDoNothing();
+    }
+
     for (const platform of ['android', 'ios']) {
       await db.insert(schema.appVersions).values({ platform, minSupported: '1.0.0', latest: '1.0.0' }).onConflictDoNothing();
     }
@@ -52,5 +57,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL is required');
   await seed(url);
-  console.log('Seed complete: staff roles, Ranchi city + pilot area, app versions');
+  console.log('Seed complete: staff roles, Ranchi city + pilot area, document rules, app versions');
 }

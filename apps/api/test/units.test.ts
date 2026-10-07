@@ -5,6 +5,8 @@ import { decrypt, encrypt } from '../src/common/crypto.js';
 import { uuidv7 } from '../src/common/ids.js';
 import { base32Decode, base32Encode, totpCode, verifyTotp } from '../src/common/totp.js';
 import { loadEnv } from '../src/config/env.js';
+import { daysBetween, todayIST } from '../src/common/dates.js';
+import { render } from '../src/notifications/templates.js';
 
 test('TOTP matches the RFC 6238 SHA-1 test vector', () => {
   const secret = base32Encode(Buffer.from('12345678901234567890'));
@@ -42,6 +44,9 @@ test('production refuses development OTP settings', () => {
     ADMIN_JWT_SECRET: 'y'.repeat(32),
     OTP_HMAC_SECRET: 'z'.repeat(32),
     STAFF_TOTP_ENC_KEY: 'a'.repeat(64),
+    PAYOUT_ENC_KEY: 'b'.repeat(64),
+    S3_BUCKET: 'zinu-prod',
+    PUSH_PROVIDER: 'expo',
   };
   assert.throws(() => loadEnv({ ...base, NODE_ENV: 'production' }), /console OTP provider/);
   assert.throws(() => loadEnv({ ...base, NODE_ENV: 'production', OTP_PROVIDER: 'msg91' }), /MSG91_AUTH_KEY/);
@@ -50,4 +55,20 @@ test('production refuses development OTP settings', () => {
     /OTP_DEV_ECHO/,
   );
   assert.doesNotThrow(() => loadEnv({ ...base, NODE_ENV: 'production', OTP_PROVIDER: 'msg91', MSG91_AUTH_KEY: 'k', MSG91_OTP_TEMPLATE_ID: 't' }));
+  const prod = { ...base, NODE_ENV: 'production', OTP_PROVIDER: 'msg91', MSG91_AUTH_KEY: 'k', MSG91_OTP_TEMPLATE_ID: 't' };
+  assert.throws(() => loadEnv({ ...prod, PUSH_PROVIDER: 'memory' }), /tests only/);
+  assert.throws(() => loadEnv({ ...prod, S3_AUTO_CREATE_BUCKET: 'true' }), /production bucket/);
+});
+
+
+test('IST calendar dates', () => {
+  // 20:00 UTC on 7 Oct is already 8 Oct in India.
+  assert.equal(todayIST(new Date('2026-10-07T20:00:00Z')), '2026-10-08');
+  assert.equal(daysBetween('2026-10-08', '2026-10-15'), 7);
+  assert.equal(daysBetween('2026-10-08', '2026-10-07'), -1);
+});
+
+test('notifications render in the user language', () => {
+  assert.equal(render('document.expiring', 'en', { docType: 'INSURANCE', days: 1, date: '2026-10-09' }).title, 'Vehicle insurance expires in 1 day');
+  assert.match(render('document.expiring', 'hi', { docType: 'INSURANCE', days: 7, date: '2026-10-15' }).title, /गाड़ी का बीमा 7 दिन में/);
 });

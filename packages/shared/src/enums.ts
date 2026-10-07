@@ -77,9 +77,71 @@ export const Permission = {
   CITIES_VIEW: 'cities.view',
   CITIES_MANAGE: 'cities.manage',
   ZONES_MANAGE: 'zones.manage',
+  DRIVERS_VIEW: 'drivers.view',
+  DRIVERS_VERIFY: 'drivers.verify',
+  DRIVERS_SUSPEND: 'drivers.suspend',
+  DOCUMENTS_VIEW_FILES: 'documents.view_files',
+  DOCUMENT_RULES_MANAGE: 'document_rules.manage',
   STAFF_MANAGE: 'staff.manage',
   AUDIT_VIEW: 'audit.view',
   SETTINGS_MANAGE: 'settings.manage',
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 export const PERMISSIONS = Object.values(Permission);
+
+// ---------------- Phase 2: drivers, vehicles, documents ----------------
+
+/** Physical vehicle types a driver can register (ride categories and pricing are configured separately). */
+export const VehicleType = {
+  BIKE: 'BIKE',
+  TOTO: 'TOTO',
+  AUTO: 'AUTO',
+  CAB: 'CAB',
+} as const;
+export type VehicleType = (typeof VehicleType)[keyof typeof VehicleType];
+
+export const FuelType = {
+  ELECTRIC: 'ELECTRIC',
+  PETROL: 'PETROL',
+  DIESEL: 'DIESEL',
+  CNG: 'CNG',
+  LPG: 'LPG',
+} as const;
+export type FuelType = (typeof FuelType)[keyof typeof FuelType];
+
+/** Spec §40. */
+export const OwnershipType = {
+  DRIVER_OWNED: 'DRIVER_OWNED',
+  ZINU_OWNED: 'ZINU_OWNED',
+  FLEET_PARTNER: 'FLEET_PARTNER',
+} as const;
+export type OwnershipType = (typeof OwnershipType)[keyof typeof OwnershipType];
+
+export const DocumentStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  EXPIRED: 'EXPIRED',
+} as const;
+export type DocumentStatus = (typeof DocumentStatus)[keyof typeof DocumentStatus];
+
+/** Built-in document types. Requirements (required, expiry rules, reminders) are admin-configurable. */
+export const DocType = {
+  DRIVING_LICENCE: 'DRIVING_LICENCE',
+  PROFILE_PHOTO: 'PROFILE_PHOTO',
+  VEHICLE_RC: 'VEHICLE_RC',
+  INSURANCE: 'INSURANCE',
+  PUC: 'PUC',
+  PERMIT: 'PERMIT',
+  VEHICLE_PHOTOS: 'VEHICLE_PHOTOS',
+} as const;
+export type DocType = (typeof DocType)[keyof typeof DocType];
+
+export const PayoutMethod = { BANK: 'BANK', UPI: 'UPI' } as const;
+export type PayoutMethod = (typeof PayoutMethod)[keyof typeof PayoutMethod];
+
+export const UploadPurpose = { DRIVER_DOCUMENT: 'DRIVER_DOCUMENT' } as const;
+export type UploadPurpose = (typeof UploadPurpose)[keyof typeof UploadPurpose];
+
+export const UPLOAD_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'application/pdf'] as const;
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;

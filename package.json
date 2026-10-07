@@ -14,7 +14,8 @@
     "db:seed": "pnpm --filter @zinu/api db:seed",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "postinstall": "pnpm --filter @zinu/shared build"
+    "postinstall": "pnpm --filter @zinu/shared build",
+    "dev:worker": "pnpm --filter @zinu/api dev:worker"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

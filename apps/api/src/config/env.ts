@@ -37,11 +37,37 @@ const EnvSchema = z
     CORS_ORIGINS: z.string().default(''),
     TRUST_PROXY: bool,
     SUPPORT_EMAIL: z.string().default('support@zinu.in'),
+
+    // ---- File storage (S3 in production; any S3-compatible server such as RustFS locally) ----
+    S3_BUCKET: z.string().min(3),
+    S3_REGION: z.string().default('ap-south-1'),
+    /** Leave empty for AWS S3. For a local S3-compatible server, e.g. http://localhost:9000 */
+    S3_ENDPOINT: z.string().optional(),
+    /** Endpoint phones/browsers use for uploads and downloads when it differs from S3_ENDPOINT (e.g. your LAN IP). */
+    S3_PUBLIC_ENDPOINT: z.string().optional(),
+    S3_FORCE_PATH_STYLE: bool,
+    /** Leave empty on AWS to use the task's IAM role. */
+    S3_ACCESS_KEY_ID: z.string().optional(),
+    S3_SECRET_ACCESS_KEY: z.string().optional(),
+    /** Development only: create the bucket on startup if missing. */
+    S3_AUTO_CREATE_BUCKET: bool,
+
+    /** 64 hex chars (32 bytes) used to encrypt bank / UPI payout details at rest. */
+    PAYOUT_ENC_KEY: z.string().regex(/^[0-9a-f]{64}$/i, 'must be 64 hex characters'),
+
+    // ---- Push notifications ----
+    PUSH_PROVIDER: z.enum(['console', 'expo', 'memory']).default('console'),
+    /** Optional Expo access token when "enhanced push security" is enabled on the Expo project. */
+    EXPO_ACCESS_TOKEN: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.NODE_ENV === 'production') {
       if (env.OTP_PROVIDER === 'console')
         ctx.addIssue({ code: 'custom', path: ['OTP_PROVIDER'], message: 'console OTP provider is not allowed in production' });
+      if (env.PUSH_PROVIDER === 'memory')
+        ctx.addIssue({ code: 'custom', path: ['PUSH_PROVIDER'], message: 'memory push provider is for tests only' });
+      if (env.S3_AUTO_CREATE_BUCKET)
+        ctx.addIssue({ code: 'custom', path: ['S3_AUTO_CREATE_BUCKET'], message: 'create the production bucket explicitly' });
       if (env.OTP_DEV_ECHO)
         ctx.addIssue({ code: 'custom', path: ['OTP_DEV_ECHO'], message: 'OTP_DEV_ECHO must be false in production' });
     }

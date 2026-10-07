@@ -65,7 +65,7 @@ export class UsersService {
       roles: roles.map((r) => ({ role: r.role as RoleT, status: r.status as MeDto['roles'][number]['status'] })),
       emergencyContacts: contacts.map((c) => ({ id: c.id, name: c.name, phone: c.phone, relation: c.relation ?? undefined })),
       driver: driver
-        ? { verificationStatus: driver.verificationStatus as DriverVerificationStatus, cityId: driver.cityId }
+        ? { verificationStatus: driver.verificationStatus as DriverVerificationStatus, cityId: driver.cityId, statusReason: driver.statusReason }
         : null,
       createdAt: user.createdAt.toISOString(),
     };
