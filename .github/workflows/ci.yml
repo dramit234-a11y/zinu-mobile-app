@@ -48,6 +48,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      # S3-compatible storage for upload tests (service containers cannot take a command, so start it here).
+      - run: docker run -d --name s3 -p 9000:9000 -e RUSTFS_ACCESS_KEY=zinu-dev -e RUSTFS_SECRET_KEY=zinu-dev-secret rustfs/rustfs:latest /data
+      - run: for i in $(seq 1 30); do curl -s -o /dev/null localhost:9000 && break; sleep 1; done
       - run: pnpm install --frozen-lockfile
       # Uses apps/api/.env.test (test-only secrets, database zinu_test).
       - run: pnpm --filter @zinu/api test

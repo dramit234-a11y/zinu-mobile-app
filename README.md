@@ -10,8 +10,8 @@ One mobile app for Android and iOS (Passenger + Driver modes), one backend API, 
 | `apps/api` | NestJS API on PostgreSQL + PostGIS and Redis |
 | `apps/admin` | Next.js Admin Dashboard (staff only) |
 | `packages/shared` | Types, validation schemas and enums shared by all apps |
-| `infra/` | Local Postgres/PostGIS + Redis via Docker Compose |
-| `docs/` | [Master spec](docs/ZINU_MASTER_SPEC.md) · [Architecture](docs/ARCHITECTURE.md) · [Phase 1 report](docs/PHASE_1.md) · [OTP / MSG91 setup](docs/OTP_SETUP.md) |
+| `infra/` | Local Postgres/PostGIS, Redis and S3-compatible storage (RustFS) via Docker Compose |
+| `docs/` | [Master spec](docs/ZINU_MASTER_SPEC.md) · [Architecture](docs/ARCHITECTURE.md) · [Phase 1 report](docs/PHASE_1.md) · [OTP / MSG91 setup](docs/OTP_SETUP.md) · [Phase 2 report](docs/PHASE_2.md) · [Push setup](docs/PUSH_SETUP.md) |
 
 ## Run everything locally
 
@@ -19,15 +19,16 @@ Prerequisites: **Node.js 22+**, **pnpm** (`corepack enable`), **Docker Desktop**
 
 ```bash
 pnpm install                                         # installs all apps, builds the shared package
-docker compose -f infra/docker-compose.yml up -d     # Postgres + PostGIS and Redis
+docker compose -f infra/docker-compose.yml up -d     # Postgres + PostGIS, Redis, S3-compatible storage
 cp apps/api/.env.example apps/api/.env               # development settings (no real secrets needed)
 pnpm db:migrate                                      # create tables
-pnpm db:seed                                         # staff roles, Ranchi city + pilot area, app versions
+pnpm db:seed                                         # staff roles, Ranchi, document rules, app versions
 
 # Create your admin login (prints a password and an authenticator secret — shown once)
 pnpm --filter @zinu/api staff:create --email you@example.com --name "Your Name"
 
 pnpm dev:api      # API on http://localhost:4000   (health: /health)
+pnpm dev:worker   # background jobs: push delivery, daily document-expiry check
 pnpm dev:admin    # Admin on http://localhost:3001
 pnpm dev:mobile   # Expo dev server — scan the QR code with Expo Go
 ```
@@ -35,7 +36,8 @@ pnpm dev:mobile   # Expo dev server — scan the QR code with Expo Go
 ### Preview the mobile app
 
 - **On your phone (Expo Go):** phone and computer on the same Wi-Fi. Create `apps/mobile/.env` with
-  `EXPO_PUBLIC_API_URL=http://<your computer's LAN IP>:4000`, run `pnpm dev:mobile`, scan the QR code
+  `EXPO_PUBLIC_API_URL=http://<your computer's LAN IP>:4000`, and in `apps/api/.env` set
+  `S3_PUBLIC_ENDPOINT=http://<your computer's LAN IP>:9000` (so photo uploads reach storage). Run `pnpm dev:mobile`, scan the QR code
   (Android: in Expo Go; iPhone: with the Camera app). If your network blocks it, run `pnpm --filter @zinu/mobile start --tunnel`.
 - **Android emulator:** `pnpm dev:mobile` then press `a` (the app reaches the API via `10.0.2.2` automatically).
 - **iOS simulator (macOS only):** press `i`.

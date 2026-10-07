@@ -1,8 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { DriverVerificationStatus } from '@zinu/shared';
+import { useFocusEffect, router } from 'expo-router';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { isoToDmy } from '../../components/forms';
+import { NotificationBell } from '../../components/NotificationBell';
 import { Badge, Button, Card, Screen, Txt, notify, showComingSoon, type IconName } from '../../components/ui';
+import { useRegistration } from '../../lib/registration';
 import { useSession } from '../../lib/session';
 import { colors, radius, spacing } from '../../lib/theme';
 
@@ -13,10 +18,23 @@ import { colors, radius, spacing } from '../../lib/theme';
 export default function DriverHome() {
   const { t } = useTranslation();
   const user = useSession((s) => s.user);
-  const status = user?.driver?.verificationStatus ?? DriverVerificationStatus.NOT_SUBMITTED;
+  const { data: reg, refetch } = useRegistration();
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
+  const status = reg?.status ?? user?.driver?.verificationStatus ?? DriverVerificationStatus.NOT_SUBMITTED;
   const approved = status === DriverVerificationStatus.APPROVED;
+  const eligible = approved && !!reg?.eligibility.canGoOnline;
+  const in30Days = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+  const expiring = (reg?.documents ?? []).filter((d) => d.inForce?.status === 'APPROVED' && d.inForce.expiresOn && d.inForce.expiresOn <= in30Days);
 
-  const goOnline = () => (approved ? showComingSoon() : notify(t('driver.goOnline'), t('driver.cannotGoOnline')));
+  // Ride requests arrive in Phase 4; until then going online is explained rather than faked.
+  const goOnline = () =>
+    eligible ? showComingSoon() : notify(t('driver.goOnline'), approved ? (reg?.eligibility.reasons.map((r) => r.message).join('\n') ?? '') : t('driver.cannotGoOnline'));
+
+  const cta = status === DriverVerificationStatus.NOT_SUBMITTED ? t('reg.continue') : status === DriverVerificationStatus.ADDITIONAL_INFO_REQUIRED ? t('reg.fix') : approved ? t('reg.renew') : t('reg.view');
 
   return (
     <Screen edges={['top']}>
@@ -33,22 +51,20 @@ export default function DriverHome() {
             </Txt>
           </View>
         </View>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('menu.notifications')} onPress={showComingSoon} style={styles.iconButton}>
-          <Ionicons name="notifications-outline" size={26} color={colors.text} />
-        </Pressable>
+        <NotificationBell />
       </View>
 
       <View style={styles.switchArea}>
         <Pressable
           accessibilityRole="switch"
-          accessibilityState={{ checked: false, disabled: !approved }}
+          accessibilityState={{ checked: false, disabled: !eligible }}
           accessibilityLabel={t('driver.goOnline')}
-          accessibilityHint={approved ? undefined : t('driver.cannotGoOnline')}
+          accessibilityHint={eligible ? undefined : t('driver.cannotGoOnline')}
           onPress={goOnline}
-          style={[styles.switch, !approved && { backgroundColor: colors.border }]}
+          style={[styles.switch, !eligible && { backgroundColor: colors.border }]}
         >
-          <Ionicons name="power" size={44} color={approved ? colors.textOnPrimary : colors.textMuted} />
-          <Txt variant="heading" color={approved ? colors.textOnPrimary : colors.textMuted} style={{ marginTop: spacing.xs }}>
+          <Ionicons name="power" size={44} color={eligible ? colors.textOnPrimary : colors.textMuted} />
+          <Txt variant="heading" color={eligible ? colors.textOnPrimary : colors.textMuted} style={{ marginTop: spacing.xs }}>
             {t('driver.goOnline')}
           </Txt>
         </Pressable>
@@ -58,18 +74,39 @@ export default function DriverHome() {
         </View>
       </View>
 
-      {!approved && (
+      {(!approved || !eligible || expiring.length > 0) && (
         <Card style={{ marginBottom: spacing.lg }}>
           <Txt variant="caption" color={colors.textMuted}>
             {t('driver.verification')}
           </Txt>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs, marginBottom: spacing.md }}>
-            <Ionicons name="shield-half" size={20} color={colors.primary} />
+            <Ionicons name={approved ? 'shield-checkmark' : 'shield-half'} size={20} color={colors.primary} />
             <Txt variant="bodyStrong" style={{ marginLeft: spacing.sm, flex: 1 }}>
               {t(`driver.status.${status}`)}
             </Txt>
           </View>
-          <Button label={t('driver.startRegistration')} icon="document-text" onPress={() => notify(t('driver.startRegistration'), t('driver.registrationSoon'))} />
+          {reg?.statusReason ? (
+            <Txt color={colors.danger} style={{ marginBottom: spacing.md }}>
+              {reg.statusReason}
+            </Txt>
+          ) : null}
+          {approved && !eligible && reg ? (
+            <View style={{ marginBottom: spacing.md }}>
+              <Txt variant="bodyStrong">{t('reg.eligibilityTitle')}</Txt>
+              {reg.eligibility.reasons.map((r) => (
+                <Txt key={r.code + (r.docType ?? '')} color={colors.danger}>
+                  • {r.message}
+                </Txt>
+              ))}
+            </View>
+          ) : null}
+          {expiring.map((d) => (
+            <View key={d.type.code} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
+              <Ionicons name="alert-circle" size={18} color="#8A6100" />
+              <Txt style={{ marginLeft: spacing.sm, flex: 1 }}>{t('reg.expiringSoon', { doc: d.type.label, date: isoToDmy(d.inForce!.expiresOn) })}</Txt>
+            </View>
+          ))}
+          <Button label={cta} icon="document-text" onPress={() => router.push('/driver-registration')} />
         </Card>
       )}
 
@@ -113,7 +150,6 @@ function Stat({ icon, label, value }: { icon: IconName; label: string; value: st
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center' },
   avatar: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
-  iconButton: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   switchArea: { alignItems: 'center', marginVertical: spacing.xxl },
   switch: {
     width: 168,

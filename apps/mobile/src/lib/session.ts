@@ -24,11 +24,8 @@ export const useSession = create<SessionState>((set) => ({
 export const roleOf = (user: MeDto | null, role: Role) => user?.roles.find((r) => r.role === role);
 
 export const hasActivePassenger = (u: MeDto | null) => roleOf(u, Role.PASSENGER)?.status === RoleStatus.ACTIVE;
-/** Driver mode is reachable during onboarding (to see verification status); going online needs APPROVED. */
-export const hasDriverRole = (u: MeDto | null) => {
-  const r = roleOf(u, Role.DRIVER);
-  return !!r && r.status !== RoleStatus.SUSPENDED;
-};
+/** Driver mode is reachable during onboarding and suspension (to see status); going online needs APPROVED. */
+export const hasDriverRole = (u: MeDto | null) => !!roleOf(u, Role.DRIVER);
 /** Spec §2: switching is offered only when both roles are approved/active. */
 export const canSwitchRoles = (u: MeDto | null) => hasActivePassenger(u) && roleOf(u, Role.DRIVER)?.status === RoleStatus.ACTIVE;
 

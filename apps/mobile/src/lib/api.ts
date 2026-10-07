@@ -1,5 +1,13 @@
 import type {
   ApiErrorBody,
+  DriverPersonalInput,
+  DriverRegistrationDto,
+  DriverVehicleInput,
+  NotificationDto,
+  PayoutInput,
+  PresignUploadInput,
+  PresignedUploadDto,
+  SubmitDocumentInput,
   AppConfigDto,
   AuthResponseDto,
   AuthTokensDto,
@@ -139,4 +147,22 @@ export const api = {
     await authed<void>('DELETE', '/v1/me');
     await clearTokens();
   },
+
+  // ---- Driver registration (Phase 2) ----
+  cities: () => raw<{ id: string; name: string; state: string }[]>('GET', '/v1/cities'),
+  registration: () => authed<DriverRegistrationDto>('GET', '/v1/driver/registration'),
+  savePersonal: (input: DriverPersonalInput) => authed<DriverRegistrationDto>('PUT', '/v1/driver/registration/personal', input),
+  saveVehicle: (input: DriverVehicleInput) => authed<DriverRegistrationDto>('PUT', '/v1/driver/registration/vehicle', input),
+  submitDocument: (type: string, input: SubmitDocumentInput) => authed<DriverRegistrationDto>('PUT', `/v1/driver/documents/${type}`, input),
+  savePayout: (input: PayoutInput) => authed<DriverRegistrationDto>('PUT', '/v1/driver/payout', input),
+  submitRegistration: () => authed<DriverRegistrationDto>('POST', '/v1/driver/registration/submit'),
+
+  presignUpload: (input: PresignUploadInput) => authed<PresignedUploadDto>('POST', '/v1/uploads/presign', input),
+  confirmUpload: (id: string) => authed<{ uploadId: string }>('POST', `/v1/uploads/${id}/confirm`),
+  uploadUrl: (id: string) => authed<{ url: string; contentType: string }>('GET', `/v1/uploads/${id}/url`),
+
+  // ---- Notifications ----
+  notifications: () => authed<NotificationDto[]>('GET', '/v1/me/notifications?limit=50'),
+  markAllRead: () => authed<void>('POST', '/v1/me/notifications/read-all'),
+  setPushToken: (token: string) => authed<void>('PUT', '/v1/me/push-token', { token, provider: 'expo' }),
 };

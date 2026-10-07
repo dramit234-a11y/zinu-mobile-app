@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { NotificationBell } from '../../components/NotificationBell';
 import { Screen, Txt, showComingSoon, type IconName } from '../../components/ui';
 import { useSession } from '../../lib/session';
 import { colors, radius, spacing } from '../../lib/theme';
@@ -42,7 +43,7 @@ export default function PassengerHome() {
             </Txt>
           </View>
         </View>
-        <IconButton icon="notifications-outline" label={t('menu.notifications')} onPress={showComingSoon} />
+        <NotificationBell />
         <IconButton icon="person-circle-outline" label={t('passenger.tabs.profile')} onPress={() => router.push('/passenger/profile')} />
       </View>
 

@@ -43,7 +43,22 @@
         }
       ],
       "expo-secure-store",
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "ZINU uses your camera to photograph your driving licence, vehicle documents and profile photo for driver verification.",
+          "photosPermission": "ZINU lets you choose photos of your driver documents from your gallery.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0E7A55",
+          "defaultChannel": "default"
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true

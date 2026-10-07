@@ -1,6 +1,6 @@
 # ZINU — Architecture & Delivery Plan
 
-> Status: **APPROVED** (with the decisions below). Phase 1 delivered — see [`PHASE_1.md`](./PHASE_1.md).
+> Status: **APPROVED** (with the decisions below). Phase 1 delivered — see [`PHASE_1.md`](./PHASE_1.md). Phase 2 delivered — see [`PHASE_2.md`](./PHASE_2.md).
 > Source of truth for product scope: [`ZINU_MASTER_SPEC.md`](./ZINU_MASTER_SPEC.md).
 > This document is the technical companion to that spec and is updated as decisions are made.
 
@@ -317,3 +317,12 @@ GitHub ──► GitHub Actions ──► EAS Build ──► EAS Submit ──�
   Switching modes from Profile is offered only when both roles are active (spec §2).
 - Request validation uses the shared Zod schemas. A generated OpenAPI document and typed client
   (`packages/api-client`) are planned once the API surface grows (Phase 2–3).
+
+## Implementation notes (Phase 2)
+
+- Local S3-compatible storage is **RustFS** (Apache-2.0). MinIO no longer publishes free community images.
+- Uploads use presigned **POST** policies, so the storage server enforces size and content type; the API confirms with HEAD.
+- Documents are versioned rows (`driver_documents`). "Current" is the latest non-superseded version and "in force" the latest
+  approved/expired one, so renewals are reviewed without interrupting a driver.
+- Background jobs use BullMQ on Redis in a separate worker process (`dist/worker.js`, same Docker image with a different command).
+- Online eligibility lives in `DriverRegistrationService.eligibility` and is the single check Phase 4 uses for GO ONLINE.

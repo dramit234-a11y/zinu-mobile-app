@@ -4,6 +4,7 @@ import {
   GetObjectCommand,
   HeadBucketCommand,
   HeadObjectCommand,
+  PutBucketCorsCommand,
   S3Client,
   type S3ClientConfig,
 } from '@aws-sdk/client-s3';
@@ -63,6 +64,18 @@ export class S3StorageService extends StorageService implements OnModuleInit {
     } catch {
       await this.internal.send(new CreateBucketCommand({ Bucket: this.env.S3_BUCKET }));
       this.logger.log(`Created bucket ${this.env.S3_BUCKET}`);
+    }
+    // Browser-based previews (Expo web) upload directly to the bucket; native apps do not need CORS.
+    const origins = this.env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
+    if (origins.length) {
+      await this.internal
+        .send(
+          new PutBucketCorsCommand({
+            Bucket: this.env.S3_BUCKET,
+            CORSConfiguration: { CORSRules: [{ AllowedOrigins: origins, AllowedMethods: ['POST', 'GET'], AllowedHeaders: ['*'], MaxAgeSeconds: 3600 }] },
+          }),
+        )
+        .catch((e: Error) => this.logger.warn(`Could not set bucket CORS: ${e.message}`));
     }
   }
 

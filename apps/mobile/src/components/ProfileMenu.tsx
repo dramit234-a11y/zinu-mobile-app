@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { errorMessage, LANGUAGE_OPTIONS } from '../i18n';
 import { api } from '../lib/api';
+import { resetPushRegistration } from '../lib/push';
 import { canSwitchRoles, hasActivePassenger, hasDriverRole, useSession, type Mode } from '../lib/session';
 import { PrefKeys, prefs } from '../lib/storage';
 import { colors, spacing } from '../lib/theme';
@@ -31,6 +32,7 @@ export function ProfileMenu({ mode }: { mode: Mode }) {
   const logout = () =>
     confirm(t('menu.logout'), t('account.logoutConfirm'), t('menu.logout'), async () => {
       await api.logout().catch(() => {});
+      resetPushRegistration();
       useSession.getState().setUser(null);
       router.replace('/phone');
     });
@@ -90,7 +92,7 @@ export function ProfileMenu({ mode }: { mode: Mode }) {
           { icon: 'wallet', label: t('menu.wallet') },
           { icon: 'card', label: t('menu.paymentMethods') },
           { icon: 'pricetags', label: t('menu.offers') },
-          { icon: 'notifications', label: t('menu.notifications') },
+          { icon: 'notifications', label: t('menu.notifications'), onPress: () => router.push('/notifications') },
           common.language,
           common.safety,
           common.help,
@@ -99,9 +101,10 @@ export function ProfileMenu({ mode }: { mode: Mode }) {
         ]
       : [
           common.personal,
-          { icon: 'car', label: t('menu.vehicle') },
-          { icon: 'documents', label: t('menu.documents') },
-          { icon: 'business', label: t('menu.payout') },
+          { icon: 'document-text', label: t('reg.title'), onPress: () => router.push('/driver-registration'), value: t(`driver.status.${user.driver?.verificationStatus ?? 'NOT_SUBMITTED'}`) },
+          { icon: 'car', label: t('menu.vehicle'), onPress: () => router.push('/driver-registration/vehicle') },
+          { icon: 'documents', label: t('menu.documents'), onPress: () => router.push('/driver-registration/documents') },
+          { icon: 'business', label: t('menu.payout'), onPress: () => router.push('/driver-registration/payout') },
           { icon: 'star', label: t('menu.ratings') },
           { icon: 'map', label: t('menu.preferredAreas') },
           { icon: 'flag', label: t('menu.dailyGoal') },

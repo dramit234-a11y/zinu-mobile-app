@@ -15,14 +15,15 @@ const SECTIONS: { title: string; items: Item[] }[] = [
     title: 'People',
     items: [
       { label: 'Passengers & Drivers', href: '/users', perm: 'users.view' },
-      { label: 'Driver Verification', phase: 2 },
+      { label: 'Driver Verification', href: '/drivers', perm: 'drivers.view' },
       { label: 'Corporate Accounts', phase: 12 },
     ],
   },
   {
     title: 'Fleet',
     items: [
-      { label: 'Vehicles', phase: 2 },
+      { label: 'Document Rules', href: '/document-rules', perm: 'drivers.view' },
+      { label: 'Vehicles', phase: 4 },
       { label: 'ZINU Vehicles', phase: 11 },
     ],
   },
@@ -52,7 +53,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
       { label: 'SOS Incidents', phase: 6 },
       { label: 'Complaints', phase: 6 },
       { label: 'Support', phase: 6 },
-      { label: 'Notifications', phase: 2 },
+      { label: 'Notifications', phase: 6 },
     ],
   },
   {
