@@ -6,12 +6,12 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
-    "start:dev": "tsc -p tsconfig.build.json && node --env-file-if-exists=.env --watch dist/main.js & tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "start:dev": "tsc -p tsconfig.build.json && concurrently -k -n tsc,api \"tsc -p tsconfig.build.json --watch --preserveWatchOutput\" \"node --env-file-if-exists=.env --watch dist/main.js\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node --env-file-if-exists=.env dist/db/migrate.js",
-    "db:seed": "node --env-file-if-exists=.env dist/scripts/seed.js",
-    "staff:create": "node --env-file-if-exists=.env dist/scripts/create-staff.js",
+    "db:migrate": "tsc -p tsconfig.build.json && node --env-file-if-exists=.env dist/db/migrate.js",
+    "db:seed": "tsc -p tsconfig.build.json && node --env-file-if-exists=.env dist/scripts/seed.js",
+    "staff:create": "tsc -p tsconfig.build.json && node --env-file-if-exists=.env dist/scripts/create-staff.js",
     "test": "tsc -p tsconfig.json && node --env-file-if-exists=.env.test --test --test-concurrency=1 'dist-test/test/**/*.test.js'"
   },
   "dependencies": {
@@ -32,7 +32,12 @@
     "@types/express": "^5.0.6",
     "@types/node": "^22.20.5",
     "@types/pg": "^8.23.1",
+    "concurrently": "^10.0.5",
     "drizzle-kit": "^0.31.11",
     "typescript": "~6.0.3"
-  }
+  },
+  "files": [
+    "dist",
+    "drizzle"
+  ]
 }

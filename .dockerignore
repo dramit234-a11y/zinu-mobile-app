@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/dist-test
+**/.next
+**/.expo
+**/.env
+apps/mobile
+apps/admin
+.git
