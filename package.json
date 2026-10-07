@@ -1,0 +1,25 @@
+{
+  "name": "zinu",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build:shared": "pnpm --filter @zinu/shared build",
+    "dev:api": "pnpm --filter @zinu/api start:dev",
+    "dev:admin": "pnpm --filter @zinu/admin dev",
+    "dev:mobile": "pnpm --filter @zinu/mobile start",
+    "db:migrate": "pnpm --filter @zinu/api db:migrate",
+    "db:seed": "pnpm --filter @zinu/api db:seed",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "postinstall": "pnpm --filter @zinu/shared build"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "argon2",
+      "esbuild"
+    ]
+  }
+}
