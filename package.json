@@ -16,7 +16,8 @@
     "test": "pnpm -r test",
     "postinstall": "pnpm --filter @zinu/shared build",
     "dev:worker": "pnpm --filter @zinu/api dev:worker",
-    "phone": "bash scripts/codespace/phone.sh"
+    "phone": "bash scripts/codespace/phone.sh",
+    "phone:diagnose": "bash scripts/codespace/diagnose.sh"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

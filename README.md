@@ -46,7 +46,7 @@ pnpm dev:mobile   # Expo dev server — scan the QR code with Expo Go
 
 Without a Google Maps key the app uses clearly labelled **demonstration map data** for Ranchi (see `docs/MAPS_SETUP.md`).
 
-In development the OTP is **not sent by SMS**: it is printed in the API terminal and shown on the OTP screen as “Development OTP”.
+In development the OTP is **not sent by SMS**: it is printed in the API terminal and shown on the OTP screen as “Development OTP”. (`pnpm phone` turns the on-screen code off, because its address is public, and prints the code in its own terminal instead.)
 
 ## Tests
 

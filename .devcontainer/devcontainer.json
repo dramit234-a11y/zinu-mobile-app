@@ -8,12 +8,17 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "hostRequirements": { "cpus": 4, "memory": "8gb" },
-  "forwardPorts": [4000, 9000, 8081, 3001],
+  // The phone reaches the app through the Cloudflare tunnel started by `pnpm phone`, so no port has to be public.
+  // Forwarded ports stay private (GitHub sign-in required); the API, storage, Postgres and Redis are not forwarded.
+  "forwardPorts": [3001],
   "portsAttributes": {
-    "4000": { "label": "ZINU API", "onAutoForward": "silent" },
-    "9000": { "label": "File storage (S3)", "onAutoForward": "silent" },
+    "3001": { "label": "Admin dashboard", "onAutoForward": "notify" },
     "8081": { "label": "Expo (Metro)", "onAutoForward": "silent" },
-    "3001": { "label": "Admin dashboard", "onAutoForward": "notify" }
+    "4000": { "label": "ZINU API", "onAutoForward": "ignore" },
+    "9000": { "label": "File storage (S3)", "onAutoForward": "ignore" },
+    "8090": { "label": "Phone preview gateway", "onAutoForward": "ignore" },
+    "5432": { "onAutoForward": "ignore" },
+    "6379": { "onAutoForward": "ignore" }
   },
   "postCreateCommand": "bash scripts/codespace/setup.sh",
   "customizations": {
