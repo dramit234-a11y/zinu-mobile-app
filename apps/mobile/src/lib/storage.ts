@@ -32,6 +32,7 @@ export const PrefKeys = {
   language: 'language',
   onboardingSeen: 'onboardingSeen',
   activeMode: 'activeMode',
+  locationAsked: 'locationAsked',
 } as const;
 
 export const SecureKeys = {

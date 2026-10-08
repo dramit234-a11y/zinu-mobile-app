@@ -7,6 +7,8 @@ export type Mode = 'passenger' | 'driver';
 interface SessionState {
   user: MeDto | null;
   mode: Mode;
+  /** From app config: 'demo' means map results are demonstration data (shown with a banner). */
+  mapsProvider: 'google' | 'demo';
   setUser(user: MeDto | null): void;
   setMode(mode: Mode): Promise<void>;
 }
@@ -14,6 +16,7 @@ interface SessionState {
 export const useSession = create<SessionState>((set) => ({
   user: null,
   mode: 'passenger',
+  mapsProvider: 'google',
   setUser: (user) => set({ user }),
   setMode: async (mode) => {
     set({ mode });

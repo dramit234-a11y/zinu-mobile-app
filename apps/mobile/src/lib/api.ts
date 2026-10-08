@@ -1,5 +1,11 @@
 import type {
   ApiErrorBody,
+  AutocompleteDto,
+  PlaceDto,
+  QuoteDto,
+  SavedPlaceDto,
+  SavedPlaceInput,
+  ServiceAreaDto,
   DriverPersonalInput,
   DriverRegistrationDto,
   DriverVehicleInput,
@@ -160,6 +166,23 @@ export const api = {
   presignUpload: (input: PresignUploadInput) => authed<PresignedUploadDto>('POST', '/v1/uploads/presign', input),
   confirmUpload: (id: string) => authed<{ uploadId: string }>('POST', `/v1/uploads/${id}/confirm`),
   uploadUrl: (id: string) => authed<{ url: string; contentType: string }>('GET', `/v1/uploads/${id}/url`),
+
+  // ---- Maps, places and quotes (Phase 3) ----
+  autocomplete: (q: string, near: { lat: number; lng: number } | null, sessionToken: string) =>
+    authed<AutocompleteDto>(
+      'GET',
+      `/v1/maps/autocomplete?${new URLSearchParams({ q, sessionToken, ...(near ? { lat: String(near.lat), lng: String(near.lng) } : {}) })}`,
+    ),
+  placeDetails: (placeId: string, sessionToken: string) =>
+    authed<{ provider: string; place: PlaceDto & { name: string } }>('GET', `/v1/maps/places/${encodeURIComponent(placeId)}?sessionToken=${encodeURIComponent(sessionToken)}`),
+  reverseGeocode: (at: { lat: number; lng: number }) => authed<{ provider: string; place: PlaceDto }>('GET', `/v1/maps/reverse?lat=${at.lat}&lng=${at.lng}`),
+  serviceArea: (at: { lat: number; lng: number }) => raw<ServiceAreaDto>('GET', `/v1/service-area?lat=${at.lat}&lng=${at.lng}`),
+  serviceZones: (cityId: string) => raw<{ id: string; name: string; boundary: { coordinates: number[][][] } }[]>('GET', `/v1/cities/${cityId}/service-zones`),
+  quote: (pickup: PlaceDto, dropoff: PlaceDto) => authed<QuoteDto>('POST', '/v1/rides/quote', { pickup, dropoff }),
+  savedPlaces: () => authed<SavedPlaceDto[]>('GET', '/v1/me/places'),
+  savePlace: (p: SavedPlaceInput) => authed<SavedPlaceDto[]>('POST', '/v1/me/places', p),
+  deletePlace: (id: string) => authed<SavedPlaceDto[]>('DELETE', `/v1/me/places/${id}`),
+  recentPlaces: () => authed<PlaceDto[]>('GET', '/v1/me/recent-places'),
 
   // ---- Notifications ----
   notifications: () => authed<NotificationDto[]>('GET', '/v1/me/notifications?limit=50'),

@@ -48,6 +48,7 @@ export default function Splash() {
     try {
       const cfg = await api.appConfig(Platform.OS, APP_VERSION);
       if (cfg.updateRequired) return setBlocker('update');
+      useSession.setState({ mapsProvider: cfg.mapsProvider });
     } catch {
       return setBlocker('server');
     }

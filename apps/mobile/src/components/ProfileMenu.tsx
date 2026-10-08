@@ -86,7 +86,7 @@ export function ProfileMenu({ mode }: { mode: Mode }) {
     mode === 'passenger'
       ? [
           common.personal,
-          { icon: 'bookmark', label: t('menu.savedPlaces') },
+          { icon: 'bookmark', label: t('menu.savedPlaces'), onPress: () => router.push('/settings/places') },
           { icon: 'heart', label: t('menu.myDrivers') },
           common.contacts,
           { icon: 'wallet', label: t('menu.wallet') },

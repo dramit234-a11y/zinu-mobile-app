@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { adminFetch } from '../../../../lib/api';
@@ -15,6 +16,9 @@ interface Zone {
   boundary: { type: 'Polygon'; coordinates: number[][][] };
 }
 
+// Leaflet needs the browser, so the map is loaded client-side only.
+const ZoneMap = dynamic(() => import('../../../../components/ZoneMap').then((m) => m.ZoneMap), { ssr: false });
+
 const ZONE_TYPES = ['SERVICE', 'PREFERRED', 'AIRPORT', 'RAILWAY', 'RESTRICTED'];
 const EXAMPLE = JSON.stringify({ type: 'Polygon', coordinates: [[[85.3, 23.36], [85.32, 23.36], [85.32, 23.38], [85.3, 23.38]]] });
 
@@ -28,6 +32,20 @@ export default function CityPage() {
   const [zone, setZone] = useState({ name: '', type: 'SERVICE', boundary: '' });
   const [probe, setProbe] = useState({ lat: '', lng: '' });
   const [probeResult, setProbeResult] = useState<string | null>(null);
+  const [drawing, setDrawing] = useState<[number, number][]>([]);
+  const [drawMode, setDrawMode] = useState(false);
+
+  const addPoint = (p: [number, number]) => {
+    setDrawing((d) => {
+      const next = [...d, p];
+      setZone((z) => ({ ...z, boundary: next.length >= 3 ? JSON.stringify({ type: 'Polygon', coordinates: [next] }) : '' }));
+      return next;
+    });
+  };
+  const resetDrawing = (points: [number, number][] = []) => {
+    setDrawing(points);
+    setZone((z) => ({ ...z, boundary: points.length >= 3 ? JSON.stringify({ type: 'Polygon', coordinates: [points] }) : '' }));
+  };
 
   const load = useCallback(async () => {
     try {
@@ -64,6 +82,8 @@ export default function CityPage() {
     run(async () => {
       await adminFetch(`/v1/admin/cities/${id}/zones`, { method: 'POST', body: { name: zone.name, type: zone.type, boundary } });
       setZone({ name: '', type: 'SERVICE', boundary: '' });
+      setDrawing([]);
+      setDrawMode(false);
     }, 'Zone created');
   };
 
@@ -104,6 +124,30 @@ export default function CityPage() {
       {notice && <p className="success" role="status">{notice}</p>}
 
       <h2>Zones</h2>
+      <div className="panel">
+        <ZoneMap
+          center={{ lat: city.centerLat, lng: city.centerLng }}
+          zones={zones.map((z) => ({ id: z.id, name: z.name, active: z.active, ring: z.boundary.coordinates[0] as [number, number][] }))}
+          drawing={drawing}
+          drawingEnabled={drawMode}
+          onAddPoint={addPoint}
+        />
+        {manageZones && (
+          <div className="actions" style={{ marginTop: 12, alignItems: 'center' }}>
+            <button type="button" className={drawMode ? 'btn' : 'btn secondary'} aria-pressed={drawMode} onClick={() => setDrawMode((v) => !v)}>
+              {drawMode ? 'Drawing: click the map to add corners' : 'Draw a new zone'}
+            </button>
+            <button type="button" className="btn secondary" disabled={!drawing.length} onClick={() => resetDrawing(drawing.slice(0, -1))}>
+              Undo corner
+            </button>
+            <button type="button" className="btn secondary" disabled={!drawing.length} onClick={() => resetDrawing()}>
+              Clear
+            </button>
+            <span className="muted">{drawing.length} corner(s){drawing.length >= 3 ? ' — name it below and create' : ''}</span>
+          </div>
+        )}
+        <p className="muted" style={{ fontSize: 12, marginBottom: 0 }}>Map tiles © OpenStreetMap contributors (admin preview; the passenger app uses Google / Apple maps).</p>
+      </div>
       <div className="panel">
         {zones.length === 0 ? (
           <span className="muted">No zones yet.</span>
@@ -178,7 +222,7 @@ export default function CityPage() {
               <textarea required value={zone.boundary} onChange={(e) => setZone({ ...zone, boundary: e.target.value })} placeholder={EXAMPLE} />
             </label>
             <p className="muted" style={{ margin: 0, fontSize: 13 }}>
-              Tip: draw the area at geojson.io and paste the polygon geometry. An on-map zone editor arrives with the maps phase.
+              Draw the zone on the map above (the boundary fills in automatically), or paste a GeoJSON polygon.
             </p>
             <div>
               <button className="btn">Create zone</button>

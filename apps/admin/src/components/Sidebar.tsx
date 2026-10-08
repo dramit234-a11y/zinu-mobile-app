@@ -31,8 +31,8 @@ const SECTIONS: { title: string; items: Item[] }[] = [
     title: 'Operations',
     items: [
       { label: 'Cities & Zones', href: '/cities', perm: 'cities.view' },
-      { label: 'Pricing', phase: 3 },
-      { label: 'Ride Categories', phase: 3 },
+      { label: 'Pricing', href: '/pricing', perm: 'cities.view' },
+      { label: 'Ride Categories', href: '/ride-categories', perm: 'cities.view' },
       { label: 'Trips', phase: 4 },
       { label: 'Scheduled Rides', phase: 8 },
       { label: 'Shared Routes', phase: 10 },

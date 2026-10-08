@@ -11,7 +11,7 @@ One mobile app for Android and iOS (Passenger + Driver modes), one backend API, 
 | `apps/admin` | Next.js Admin Dashboard (staff only) |
 | `packages/shared` | Types, validation schemas and enums shared by all apps |
 | `infra/` | Local Postgres/PostGIS, Redis and S3-compatible storage (RustFS) via Docker Compose |
-| `docs/` | [Master spec](docs/ZINU_MASTER_SPEC.md) · [Architecture](docs/ARCHITECTURE.md) · [Phase 1 report](docs/PHASE_1.md) · [OTP / MSG91 setup](docs/OTP_SETUP.md) · [Phase 2 report](docs/PHASE_2.md) · [Push setup](docs/PUSH_SETUP.md) |
+| `docs/` | [Master spec](docs/ZINU_MASTER_SPEC.md) · [Architecture](docs/ARCHITECTURE.md) · [Phase 1 report](docs/PHASE_1.md) · [OTP / MSG91 setup](docs/OTP_SETUP.md) · [Phase 2 report](docs/PHASE_2.md) · [Push setup](docs/PUSH_SETUP.md) · [Phase 3 report](docs/PHASE_3.md) · [Google Maps setup & costs](docs/MAPS_SETUP.md) |
 
 ## Run everything locally
 
@@ -22,7 +22,7 @@ pnpm install                                         # installs all apps, builds
 docker compose -f infra/docker-compose.yml up -d     # Postgres + PostGIS, Redis, S3-compatible storage
 cp apps/api/.env.example apps/api/.env               # development settings (no real secrets needed)
 pnpm db:migrate                                      # create tables
-pnpm db:seed                                         # staff roles, Ranchi, document rules, app versions
+pnpm db:seed                                         # staff roles, Ranchi, document rules, ride categories + sample fares
 
 # Create your admin login (prints a password and an authenticator secret — shown once)
 pnpm --filter @zinu/api staff:create --email you@example.com --name "Your Name"
@@ -42,6 +42,8 @@ pnpm dev:mobile   # Expo dev server — scan the QR code with Expo Go
 - **Android emulator:** `pnpm dev:mobile` then press `a` (the app reaches the API via `10.0.2.2` automatically).
 - **iOS simulator (macOS only):** press `i`.
 - **In a browser (quick look):** press `w`. Useful for layout checks; phone-only features need a device.
+
+Without a Google Maps key the app uses clearly labelled **demonstration map data** for Ranchi (see `docs/MAPS_SETUP.md`).
 
 In development the OTP is **not sent by SMS**: it is printed in the API terminal and shown on the OTP screen as “Development OTP”.
 

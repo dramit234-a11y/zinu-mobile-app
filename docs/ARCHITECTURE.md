@@ -1,6 +1,6 @@
 # ZINU — Architecture & Delivery Plan
 
-> Status: **APPROVED** (with the decisions below). Phase 1 delivered — see [`PHASE_1.md`](./PHASE_1.md). Phase 2 delivered — see [`PHASE_2.md`](./PHASE_2.md).
+> Status: **APPROVED** (with the decisions below). Phase 1 delivered — see [`PHASE_1.md`](./PHASE_1.md). Phase 2 delivered — see [`PHASE_2.md`](./PHASE_2.md). Phase 3 delivered — see [`PHASE_3.md`](./PHASE_3.md).
 > Source of truth for product scope: [`ZINU_MASTER_SPEC.md`](./ZINU_MASTER_SPEC.md).
 > This document is the technical companion to that spec and is updated as decisions are made.
 
@@ -326,3 +326,12 @@ GitHub ──► GitHub Actions ──► EAS Build ──► EAS Submit ──�
   approved/expired one, so renewals are reviewed without interrupting a driver.
 - Background jobs use BullMQ on Redis in a separate worker process (`dist/worker.js`, same Docker image with a different command).
 - Online eligibility lives in `DriverRegistrationService.eligibility` and is the single check Phase 4 uses for GO ONLINE.
+
+## Implementation notes (Phase 3)
+
+- Maps: `MapsProvider` (Google: Places API (New), Geocoding, Routes API; demo provider without a key) behind `MapsService`
+  (Redis cache, per-user rate limit). The mobile app never calls Google web services directly.
+- Map rendering: `ZinuMap` component. Native = react-native-maps (Google on Android; Apple Maps on iOS unless built with an
+  iOS key); web preview = Leaflet + OpenStreetMap. Keys are injected at build time via `app.config.ts` from the environment.
+- Fare engine `calculateFare` lives in `@zinu/shared` (integer paise) and is the single source of truth for API, admin and app.
+- Pricing rules are append-only versions; `fare_quotes` store the rule id, route and breakdown, and expire after 10 minutes.

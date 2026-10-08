@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { useTranslation } from 'react-i18next';
 import type { ColorValue } from 'react-native';
@@ -30,6 +31,13 @@ export default function PassengerTabs() {
         <Tabs.Screen name="trips" options={{ title: t('passenger.tabs.trips'), tabBarIcon: icon('time') }} />
         <Tabs.Screen
           name="book"
+          // Book is an action, not a destination: it opens destination search (spec §10).
+          listeners={{
+            tabPress: (e) => {
+              e.preventDefault();
+              router.push('/ride/search');
+            },
+          }}
           options={{
             title: t('passenger.tabs.book'),
             // Raised centre action: the button renders its own icon and label.
