@@ -1,0 +1,22 @@
+{
+  // GitHub Codespaces / Dev Containers setup for ZINU: Node 22 + pnpm + Docker (for Postgres/PostGIS, Redis and
+  // S3-compatible storage). Nothing needs to be installed on your own computer.
+  "name": "ZINU",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "hostRequirements": { "cpus": 4, "memory": "8gb" },
+  "forwardPorts": [4000, 9000, 8081, 3001],
+  "portsAttributes": {
+    "4000": { "label": "ZINU API", "onAutoForward": "silent" },
+    "9000": { "label": "File storage (S3)", "onAutoForward": "silent" },
+    "8081": { "label": "Expo (Metro)", "onAutoForward": "silent" },
+    "3001": { "label": "Admin dashboard", "onAutoForward": "notify" }
+  },
+  "postCreateCommand": "bash scripts/codespace/setup.sh",
+  "customizations": {
+    "codespaces": { "openFiles": ["docs/IPHONE_PREVIEW.md"] }
+  }
+}

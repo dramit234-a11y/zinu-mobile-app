@@ -35,6 +35,7 @@ pnpm dev:mobile   # Expo dev server — scan the QR code with Expo Go
 
 ### Preview the mobile app
 
+- **No local installs (recommended for a low-spec Mac):** follow [docs/IPHONE_PREVIEW.md](docs/IPHONE_PREVIEW.md). It uses GitHub Codespaces + Expo Go, with one command: `pnpm phone`.
 - **On your phone (Expo Go):** phone and computer on the same Wi-Fi. Create `apps/mobile/.env` with
   `EXPO_PUBLIC_API_URL=http://<your computer's LAN IP>:4000`, and in `apps/api/.env` set
   `S3_PUBLIC_ENDPOINT=http://<your computer's LAN IP>:9000` (so photo uploads reach storage). Run `pnpm dev:mobile`, scan the QR code

@@ -15,7 +15,8 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "postinstall": "pnpm --filter @zinu/shared build",
-    "dev:worker": "pnpm --filter @zinu/api dev:worker"
+    "dev:worker": "pnpm --filter @zinu/api dev:worker",
+    "phone": "bash scripts/codespace/phone.sh"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
