@@ -55,6 +55,15 @@ const EnvSchema = z
     /** 64 hex chars (32 bytes) used to encrypt bank / UPI payout details at rest. */
     PAYOUT_ENC_KEY: z.string().regex(/^[0-9a-f]{64}$/i, 'must be 64 hex characters'),
 
+    // ---- Maps (spec §59) ----
+    /** "google" needs GOOGLE_MAPS_SERVER_KEY. "demo" uses built-in, clearly labelled demonstration data for Ranchi. */
+    MAPS_PROVIDER: z.enum(['google', 'demo']).default('demo'),
+    /** Server-side key: Places API (New), Geocoding API, Routes API. Never shipped in the app. */
+    GOOGLE_MAPS_SERVER_KEY: z.string().optional(),
+    /** Per-user limit on map lookups (autocomplete, place, reverse geocode, quotes) to cap API spend. */
+    MAPS_MAX_REQUESTS_PER_HOUR: z.coerce.number().int().default(300),
+    QUOTE_TTL_SEC: z.coerce.number().int().default(600),
+
     // ---- Push notifications ----
     PUSH_PROVIDER: z.enum(['console', 'expo', 'memory']).default('console'),
     /** Optional Expo access token when "enhanced push security" is enabled on the Expo project. */
@@ -64,6 +73,8 @@ const EnvSchema = z
     if (env.NODE_ENV === 'production') {
       if (env.OTP_PROVIDER === 'console')
         ctx.addIssue({ code: 'custom', path: ['OTP_PROVIDER'], message: 'console OTP provider is not allowed in production' });
+      if (env.MAPS_PROVIDER === 'demo')
+        ctx.addIssue({ code: 'custom', path: ['MAPS_PROVIDER'], message: 'demo map data is not allowed in production' });
       if (env.PUSH_PROVIDER === 'memory')
         ctx.addIssue({ code: 'custom', path: ['PUSH_PROVIDER'], message: 'memory push provider is for tests only' });
       if (env.S3_AUTO_CREATE_BUCKET)
@@ -71,6 +82,8 @@ const EnvSchema = z
       if (env.OTP_DEV_ECHO)
         ctx.addIssue({ code: 'custom', path: ['OTP_DEV_ECHO'], message: 'OTP_DEV_ECHO must be false in production' });
     }
+    if (env.MAPS_PROVIDER === 'google' && !env.GOOGLE_MAPS_SERVER_KEY)
+      ctx.addIssue({ code: 'custom', path: ['GOOGLE_MAPS_SERVER_KEY'], message: 'GOOGLE_MAPS_SERVER_KEY is required for the google maps provider' });
     if (env.OTP_PROVIDER === 'msg91' && (!env.MSG91_AUTH_KEY || !env.MSG91_OTP_TEMPLATE_ID))
       ctx.addIssue({ code: 'custom', path: ['MSG91_AUTH_KEY'], message: 'MSG91_AUTH_KEY and MSG91_OTP_TEMPLATE_ID are required for the msg91 provider' });
   });

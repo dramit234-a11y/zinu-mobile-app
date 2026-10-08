@@ -36,6 +36,7 @@ export class AppConfigController {
       updateAvailable: compareVersions(version, latest) < 0,
       supportedLanguages: LANGUAGES,
       supportEmail: this.env.SUPPORT_EMAIL,
+      mapsProvider: this.env.MAPS_PROVIDER,
     };
   }
 }

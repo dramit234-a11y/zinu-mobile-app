@@ -3,6 +3,7 @@ import {
   bigserial,
   boolean,
   date,
+  doublePrecision,
   customType,
   index,
   integer,
@@ -404,4 +405,128 @@ export const notifications = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index('notifications_user_idx').on(t.userId, t.createdAt)],
+);
+
+// ---------------- Rides: categories, pricing, quotes, places (Phase 3) ----------------
+
+/** Catalogue of ride categories (spec §12). Which ones a city offers is in city_ride_categories. */
+export const rideCategories = pgTable('ride_categories', {
+  code: varchar('code', { length: 16 }).primaryKey(),
+  name: varchar('name', { length: 40 }).notNull(),
+  description: varchar('description', { length: 120 }).notNull(),
+  capacity: integer('capacity').notNull(),
+  /** Vehicle types that can serve this category (driver vehicle_type). */
+  vehicleTypes: text('vehicle_types').array().notNull(),
+  perSeat: boolean('per_seat').notNull().default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+});
+
+export const cityRideCategories = pgTable(
+  'city_ride_categories',
+  {
+    cityId: uuid('city_id')
+      .notNull()
+      .references(() => cities.id),
+    categoryCode: varchar('category_code', { length: 16 })
+      .notNull()
+      .references(() => rideCategories.code),
+    enabled: boolean('enabled').notNull().default(true),
+    sortOrder: integer('sort_order').notNull().default(0),
+    updatedAt: updatedAt(),
+  },
+  (t) => [primaryKey({ columns: [t.cityId, t.categoryCode] })],
+);
+
+/** Versioned fares per city and category (spec §13). Rows are never edited: a change is a new version. */
+export const pricingRules = pgTable(
+  'pricing_rules',
+  {
+    id: uuid('id').primaryKey(),
+    cityId: uuid('city_id')
+      .notNull()
+      .references(() => cities.id),
+    categoryCode: varchar('category_code', { length: 16 })
+      .notNull()
+      .references(() => rideCategories.code),
+    version: integer('version').notNull(),
+    baseFarePaise: integer('base_fare_paise').notNull(),
+    baseDistanceM: integer('base_distance_m').notNull(),
+    perKmPaise: integer('per_km_paise').notNull(),
+    perMinPaise: integer('per_min_paise').notNull(),
+    minFarePaise: integer('min_fare_paise').notNull(),
+    platformFeePaise: integer('platform_fee_paise').notNull(),
+    taxBps: integer('tax_bps').notNull(),
+    nightSurchargeBps: integer('night_surcharge_bps').notNull(),
+    nightStartHour: integer('night_start_hour').notNull(),
+    nightEndHour: integer('night_end_hour').notNull(),
+    note: varchar('note', { length: 200 }),
+    createdBy: uuid('created_by'),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex('pricing_rules_version_uq').on(t.cityId, t.categoryCode, t.version)],
+);
+
+/** A priced option shown to a passenger. Phase 4 books against a quote id so the fare can't be altered by the client. */
+export const fareQuotes = pgTable(
+  'fare_quotes',
+  {
+    id: uuid('id').primaryKey(),
+    groupId: uuid('group_id').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    cityId: uuid('city_id')
+      .notNull()
+      .references(() => cities.id),
+    categoryCode: varchar('category_code', { length: 16 }).notNull(),
+    pricingRuleId: uuid('pricing_rule_id')
+      .notNull()
+      .references(() => pricingRules.id),
+    pickup: jsonb('pickup').notNull(),
+    dropoff: jsonb('dropoff').notNull(),
+    distanceM: integer('distance_m').notNull(),
+    durationS: integer('duration_s').notNull(),
+    polyline: text('polyline').notNull(),
+    breakdown: jsonb('breakdown').notNull(),
+    totalPaise: integer('total_paise').notNull(),
+    mapsProvider: varchar('maps_provider', { length: 16 }).notNull(),
+    expiresAt: ts('expires_at').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index('fare_quotes_user_idx').on(t.userId, t.createdAt), index('fare_quotes_group_idx').on(t.groupId)],
+);
+
+export const savedPlaces = pgTable(
+  'saved_places',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    label: varchar('label', { length: 8 }).notNull(),
+    name: varchar('name', { length: 120 }),
+    address: varchar('address', { length: 300 }).notNull(),
+    lat: doublePrecision('lat').notNull(),
+    lng: doublePrecision('lng').notNull(),
+    placeId: varchar('place_id', { length: 300 }),
+    createdAt: createdAt(),
+  },
+  (t) => [index('saved_places_user_idx').on(t.userId), uniqueIndex('saved_places_home_work_uq').on(t.userId, t.label).where(sql`label in ('HOME','WORK')`)],
+);
+
+export const recentPlaces = pgTable(
+  'recent_places',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 120 }),
+    address: varchar('address', { length: 300 }).notNull(),
+    lat: doublePrecision('lat').notNull(),
+    lng: doublePrecision('lng').notNull(),
+    placeId: varchar('place_id', { length: 300 }),
+    usedAt: ts('used_at').notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('recent_places_user_address_uq').on(t.userId, t.address), index('recent_places_user_idx').on(t.userId, t.usedAt)],
 );

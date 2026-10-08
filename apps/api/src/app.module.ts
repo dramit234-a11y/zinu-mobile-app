@@ -4,6 +4,7 @@ import { AdminAuthService } from './admin/admin-auth.service.js';
 import { AdminAuthController, AdminController } from './admin/admin.controllers.js';
 import { AdminGuard } from './admin/admin.guard.js';
 import { AdminDriversController } from './admin/drivers.controller.js';
+import { AdminPricingController } from './admin/pricing.controller.js';
 import { GeoService } from './admin/geo.service.js';
 import { AppConfigController } from './app-config/app-config.controller.js';
 import { AuthController } from './auth/auth.controller.js';
@@ -22,6 +23,14 @@ import { DriverRegistrationService } from './drivers/registration.service.js';
 import { VerificationService } from './drivers/verification.service.js';
 import { HealthController } from './health/health.controller.js';
 import { JobsModule } from './jobs/jobs.module.js';
+import { DemoMapsProvider } from './maps/demo.provider.js';
+import { GoogleMapsProvider } from './maps/google.provider.js';
+import { MAPS_PROVIDER } from './maps/maps.provider.js';
+import { MapsService } from './maps/maps.service.js';
+import { PlacesService } from './rides/places.service.js';
+import { PricingService } from './rides/pricing.service.js';
+import { QuotesService } from './rides/quotes.service.js';
+import { MapsController, RidesController, ServiceAreaController } from './rides/rides.controller.js';
 import { NotificationsController } from './notifications/notifications.controller.js';
 import { NotificationsService } from './notifications/notifications.service.js';
 import { PUSH_PROVIDER, createPushProvider } from './notifications/push.provider.js';
@@ -43,9 +52,13 @@ import { UsersService } from './users/users.service.js';
     CitiesController,
     DriverController,
     UploadsController,
+    MapsController,
+    ServiceAreaController,
+    RidesController,
     AdminAuthController,
     AdminController,
     AdminDriversController,
+    AdminPricingController,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
@@ -65,6 +78,15 @@ import { UsersService } from './users/users.service.js';
     DriverRegistrationService,
     VerificationService,
     DocumentExpiryService,
+    {
+      provide: MAPS_PROVIDER,
+      inject: [ENV],
+      useFactory: (env: Env) => (env.MAPS_PROVIDER === 'google' ? new GoogleMapsProvider(env.GOOGLE_MAPS_SERVER_KEY!) : new DemoMapsProvider()),
+    },
+    MapsService,
+    PlacesService,
+    PricingService,
+    QuotesService,
   ],
 })
 export class AppModule {}

@@ -146,6 +146,8 @@ export interface AppConfigDto {
   updateAvailable: boolean;
   supportedLanguages: string[];
   supportEmail: string;
+  /** "demo" means map results are demonstration data and the app shows a banner. */
+  mapsProvider: 'google' | 'demo';
 }
 
 // ---------- Admin ----------
@@ -368,3 +370,84 @@ export const updateDocumentTypeSchema = z
     reminderDays: z.array(z.number().int().min(0).max(365)).max(10),
   })
   .partial();
+
+// ---------------- Phase 3: places, quotes, pricing ----------------
+
+export const latLngSchema = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) });
+
+export const placeSchema = latLngSchema.extend({
+  address: z.string().trim().min(1).max(300),
+  name: z.string().trim().max(120).optional(),
+  placeId: z.string().max(300).optional(),
+});
+export type PlaceInput = z.input<typeof placeSchema>;
+
+export const quoteRequestSchema = z.object({ pickup: placeSchema, dropoff: placeSchema });
+
+export const savedPlaceSchema = placeSchema.extend({ label: z.enum(['HOME', 'WORK', 'OTHER']) });
+export type SavedPlaceInput = z.input<typeof savedPlaceSchema>;
+
+export interface PlaceDto {
+  lat: number;
+  lng: number;
+  address: string;
+  name?: string;
+  placeId?: string;
+}
+
+export interface SavedPlaceDto extends PlaceDto {
+  id: string;
+  label: 'HOME' | 'WORK' | 'OTHER';
+}
+
+export interface AutocompleteDto {
+  provider: 'google' | 'demo';
+  suggestions: { placeId: string; primary: string; secondary: string; distanceM?: number }[];
+}
+
+export interface ServiceAreaDto {
+  inService: boolean;
+  city: { id: string; name: string } | null;
+  zone: { id: string; name: string } | null;
+}
+
+export interface QuoteOptionDto {
+  quoteId: string;
+  category: string;
+  name: string;
+  description: string;
+  capacity: number;
+  perSeat: boolean;
+  durationS: number;
+  fare: import('./fare.js').FareBreakdown;
+  /** Pickup ETA needs live drivers (Phase 4). Never estimated from fake data. */
+  pickupEtaS: number | null;
+}
+
+export interface QuoteDto {
+  quoteGroupId: string;
+  expiresAt: string;
+  provider: 'google' | 'demo';
+  city: { id: string; name: string };
+  route: { distanceM: number; durationS: number; polyline: string };
+  options: QuoteOptionDto[];
+}
+
+/** Admin input for a new pricing version. Amounts in paise (integers). */
+export const pricingRuleSchema = z
+  .object({
+    baseFarePaise: z.number().int().min(0).max(1_000_000),
+    baseDistanceM: z.number().int().min(0).max(50_000),
+    perKmPaise: z.number().int().min(0).max(100_000),
+    perMinPaise: z.number().int().min(0).max(10_000),
+    minFarePaise: z.number().int().min(0).max(1_000_000),
+    platformFeePaise: z.number().int().min(0).max(100_000),
+    taxBps: z.number().int().min(0).max(5000),
+    nightSurchargeBps: z.number().int().min(0).max(20_000),
+    nightStartHour: z.number().int().min(0).max(23),
+    nightEndHour: z.number().int().min(0).max(23),
+    note: z.string().trim().max(200).optional(),
+  });
+export type PricingRuleInput = z.input<typeof pricingRuleSchema>;
+
+export const cityCategorySchema = z.object({ enabled: z.boolean().optional(), sortOrder: z.number().int().min(0).max(100).optional() });

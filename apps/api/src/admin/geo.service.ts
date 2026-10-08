@@ -126,6 +126,28 @@ export class GeoService {
     return { before, after: await this.getZone(id) };
   }
 
+  /** The active service zone (in an active city) covering a point, if any. */
+  async serviceAreaAt(lat: number, lng: number) {
+    const [row] = await this.db
+      .select({ cityId: cities.id, cityName: cities.name, zoneId: zones.id, zoneName: zones.name })
+      .from(zones)
+      .innerJoin(cities, eq(cities.id, zones.cityId))
+      .where(and(eq(cities.status, 'ACTIVE'), eq(zones.active, true), eq(zones.type, 'SERVICE'), sql`ST_Covers(${zones.boundary}, ${point(lat, lng)})`))
+      .orderBy(zones.name)
+      .limit(1);
+    return row
+      ? { inService: true, city: { id: row.cityId, name: row.cityName }, zone: { id: row.zoneId, name: row.zoneName } }
+      : { inService: false, city: null, zone: null };
+  }
+
+  /** Public service-zone outlines for the passenger map overlay. */
+  serviceZones(cityId: string) {
+    return this.db
+      .select({ id: zones.id, name: zones.name, boundary: zoneColumns.boundary })
+      .from(zones)
+      .where(and(eq(zones.cityId, cityId), eq(zones.active, true), eq(zones.type, 'SERVICE')));
+  }
+
   /** Zones of a city containing a point — the geofencing primitive later phases build on. */
   zonesAt(cityId: string, lat: number, lng: number) {
     return this.db

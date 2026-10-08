@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import { uuidv7 } from '../common/ids.js';
 import * as schema from '../db/schema.js';
-import { DOCUMENT_TYPES, RANCHI, SYSTEM_ROLES } from './seed-data.js';
+import { DOCUMENT_TYPES, RANCHI, RIDE_CATEGORY_SEED, SAMPLE_PRICING, SYSTEM_ROLES } from './seed-data.js';
 
 /** Idempotent: safe to run on every deploy. */
 export async function seed(databaseUrl: string) {
@@ -44,6 +44,14 @@ export async function seed(databaseUrl: string) {
       await db.insert(schema.documentTypes).values(t).onConflictDoNothing();
     }
 
+    for (const c of RIDE_CATEGORY_SEED) await db.insert(schema.rideCategories).values(c).onConflictDoNothing();
+    // Ranchi offers every category; sample fares only when the city has none yet (admin edits are never overwritten).
+    for (const c of RIDE_CATEGORY_SEED) {
+      await db.insert(schema.cityRideCategories).values({ cityId: city!.id, categoryCode: c.code, enabled: true, sortOrder: c.sortOrder }).onConflictDoNothing();
+      const existing = await db.query.pricingRules.findFirst({ where: (r, { and, eq }) => and(eq(r.cityId, city!.id), eq(r.categoryCode, c.code)) });
+      if (!existing) await db.insert(schema.pricingRules).values({ id: uuidv7(), cityId: city!.id, categoryCode: c.code, version: 1, ...(SAMPLE_PRICING[c.code] as object) } as typeof schema.pricingRules.$inferInsert);
+    }
+
     for (const platform of ['android', 'ios']) {
       await db.insert(schema.appVersions).values({ platform, minSupported: '1.0.0', latest: '1.0.0' }).onConflictDoNothing();
     }
@@ -57,5 +65,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL is required');
   await seed(url);
-  console.log('Seed complete: staff roles, Ranchi city + pilot area, document rules, app versions');
+  console.log('Seed complete: staff roles, Ranchi city + pilot area, document rules, ride categories + sample fares, app versions');
 }

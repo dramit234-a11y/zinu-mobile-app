@@ -47,6 +47,8 @@ test('production refuses development OTP settings', () => {
     PAYOUT_ENC_KEY: 'b'.repeat(64),
     S3_BUCKET: 'zinu-prod',
     PUSH_PROVIDER: 'expo',
+    MAPS_PROVIDER: 'google',
+    GOOGLE_MAPS_SERVER_KEY: 'server-key',
   };
   assert.throws(() => loadEnv({ ...base, NODE_ENV: 'production' }), /console OTP provider/);
   assert.throws(() => loadEnv({ ...base, NODE_ENV: 'production', OTP_PROVIDER: 'msg91' }), /MSG91_AUTH_KEY/);
@@ -58,6 +60,8 @@ test('production refuses development OTP settings', () => {
   const prod = { ...base, NODE_ENV: 'production', OTP_PROVIDER: 'msg91', MSG91_AUTH_KEY: 'k', MSG91_OTP_TEMPLATE_ID: 't' };
   assert.throws(() => loadEnv({ ...prod, PUSH_PROVIDER: 'memory' }), /tests only/);
   assert.throws(() => loadEnv({ ...prod, S3_AUTO_CREATE_BUCKET: 'true' }), /production bucket/);
+  assert.throws(() => loadEnv({ ...prod, MAPS_PROVIDER: 'demo' }), /demo map data/);
+  assert.throws(() => loadEnv({ ...prod, GOOGLE_MAPS_SERVER_KEY: '' }), /GOOGLE_MAPS_SERVER_KEY/);
 });
 
 

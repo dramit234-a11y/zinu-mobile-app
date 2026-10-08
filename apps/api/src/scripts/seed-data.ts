@@ -14,6 +14,7 @@ export const SYSTEM_ROLES: { name: string; description: string; permissions: str
       Permission.USERS_VIEW,
       Permission.DRIVERS_VIEW,
       Permission.DRIVERS_SUSPEND,
+      Permission.PRICING_MANAGE,
     ],
   },
   {
@@ -76,3 +77,25 @@ export const DOCUMENT_TYPES = [
   { code: 'PERMIT', label: 'Permit', ownerType: 'VEHICLE', required: false, requiresNumber: true, requiresExpiry: true, minFiles: 1, maxFiles: 2, blockOnlineWhenExpired: true, sortOrder: 60 },
   { code: 'VEHICLE_PHOTOS', label: 'Vehicle photos (front and back with number plate)', ownerType: 'VEHICLE', required: true, requiresNumber: false, requiresExpiry: false, minFiles: 2, maxFiles: 4, blockOnlineWhenExpired: false, sortOrder: 70 },
 ];
+
+/** Spec §12 ride categories. */
+export const RIDE_CATEGORY_SEED = [
+  { code: 'BIKE', name: 'Bike', description: 'Fast & economical', capacity: 1, vehicleTypes: ['BIKE'], perSeat: false, sortOrder: 10 },
+  { code: 'TOTO', name: 'Toto', description: 'Affordable electric local ride', capacity: 4, vehicleTypes: ['TOTO'], perSeat: false, sortOrder: 20 },
+  { code: 'AUTO', name: 'Auto', description: 'Convenient everyday travel', capacity: 3, vehicleTypes: ['AUTO'], perSeat: false, sortOrder: 30 },
+  { code: 'CAB', name: 'Cab', description: 'Comfortable private ride', capacity: 4, vehicleTypes: ['CAB'], perSeat: false, sortOrder: 40 },
+  { code: 'SHARED', name: 'Shared', description: 'Share and save', capacity: 1, vehicleTypes: ['TOTO', 'AUTO'], perSeat: true, sortOrder: 50 },
+];
+
+/**
+ * SAMPLE FARES for development and testing only — not researched market rates. Set real Ranchi fares in
+ * Admin → Pricing before launch. Amounts in paise. Tax is 0 until GST treatment is confirmed with your CA.
+ */
+const night = { taxBps: 0, nightSurchargeBps: 2000, nightStartHour: 22, nightEndHour: 6, note: 'Sample fare for development — replace before launch' };
+export const SAMPLE_PRICING: Record<string, Record<string, number | string>> = {
+  BIKE: { baseFarePaise: 2000, baseDistanceM: 1500, perKmPaise: 700, perMinPaise: 50, minFarePaise: 2500, platformFeePaise: 300, ...night },
+  TOTO: { baseFarePaise: 1500, baseDistanceM: 1000, perKmPaise: 800, perMinPaise: 50, minFarePaise: 2000, platformFeePaise: 200, ...night },
+  AUTO: { baseFarePaise: 3000, baseDistanceM: 1500, perKmPaise: 1200, perMinPaise: 100, minFarePaise: 3500, platformFeePaise: 500, ...night },
+  CAB: { baseFarePaise: 5000, baseDistanceM: 2000, perKmPaise: 1600, perMinPaise: 150, minFarePaise: 8000, platformFeePaise: 1000, ...night },
+  SHARED: { baseFarePaise: 1000, baseDistanceM: 1000, perKmPaise: 500, perMinPaise: 0, minFarePaise: 1500, platformFeePaise: 200, ...night },
+};

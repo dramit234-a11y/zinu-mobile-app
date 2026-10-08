@@ -82,6 +82,7 @@ export const Permission = {
   DRIVERS_SUSPEND: 'drivers.suspend',
   DOCUMENTS_VIEW_FILES: 'documents.view_files',
   DOCUMENT_RULES_MANAGE: 'document_rules.manage',
+  PRICING_MANAGE: 'pricing.manage',
   STAFF_MANAGE: 'staff.manage',
   AUDIT_VIEW: 'audit.view',
   SETTINGS_MANAGE: 'settings.manage',
